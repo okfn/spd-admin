@@ -13,7 +13,7 @@ import datetime
 import subprocess
 import contextlib
 import pytz
-from . import compat
+import compat
 
 
 @contextlib.contextmanager
@@ -35,6 +35,7 @@ class Task(object):
         self.branch = self.config['branch']
         self.result_file = os.path.join(self.config['data_dir'], self.config['result_file'])
         self.run_file = os.path.join(self.config['data_dir'], self.config['run_file'])
+        self.cache_dir = self.config['cache_dir']
         self.all_scores = []
 
 
@@ -59,11 +60,11 @@ class Aggregator(Task):
 
         with io.open(self.result_file, mode='a+t', encoding='utf-8') as f:
 
-            source = self.get_source(pipeline.data.data_source)
+            source = self.get_source(pipeline.data_source)
             result_id = uuid.uuid4().hex
             period_id = source['period_id']
             score = compat.str(self.get_pipeline_score(pipeline))
-            data = pipeline.data.data_source
+            data = pipeline.data_source
             schema = '' # pipeline.pipeline[1].schema_source
             summary = '' # TODO: how/what should a summary be?
             report = self.get_pipeline_report_url(pipeline)
@@ -73,6 +74,8 @@ class Aggregator(Task):
                                    summary, self.run_id, self.timestamp, report])
 
             f.write('{0}\n'.format(result_set))
+        
+        self.fetch_data(pipeline, source['id'])
 
     def get_lookup(self):
 
@@ -127,7 +130,19 @@ class Aggregator(Task):
             rf.write('{0}\n'.format(entry))
 
         return True
-
+    
+    def fetch_data(self, pipeline, source_id):
+        """Cache the data source in the /fetched directory"""
+        
+        cached_file_name = os.path.join(self.cache_dir, source_id)
+        pipeline.data.stream.seek(0)
+        
+        with io.open(cached_file_name, mode='w+', encoding='utf-8') as f:
+            for line in pipeline.data.stream:
+                f.write(line)
+        
+        
+        
 
 class Deploy(Task):
 

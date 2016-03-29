@@ -27,7 +27,7 @@ Dashboard she is administering
 * The deployer/administrator, or possibly content editor, occasionally updates
 the `sources.csv` file in the data directory with new data sources
 * Periodically (once a month, once a quarter), the deployer/administrator does
-`spd-admin run /path/to-config.json --deploy`. This builds a new set of results for the data,
+`dq run /path/to-config.json --deploy`. This builds a new set of results for the data,
 and deploys the updated data back to the central data repository (i.e: GitHub)
 * As the Spend Publishing Dashboard is a pure client-side application, as soon as updated
 data is deployed, the app will start working with the updated data.

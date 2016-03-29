@@ -4,13 +4,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import shutil
 import os
 import sys
 import io
 import json
 import click
 from goodtables import pipeline
-from spd_admin import tasks
+import tasks
 
 
 @click.group()
@@ -32,6 +33,12 @@ def run(config_filepath, deploy, encoding):
     if not os.path.isabs(config['data_dir']):
         config['data_dir'] = os.path.join(os.path.dirname(config_filepath),
                                           config['data_dir'])
+
+    if not os.path.isabs(config['cache_dir']):
+        config['cache_dir'] = os.path.join(os.path.dirname(config_filepath),
+                                          config['cache_dir'])        
+                                          
+    set_up_cache_dir(config['cache_dir'])
  
     source_filepath = os.path.join(config['data_dir'], config['source_file'])
     aggregator = tasks.Aggregator(config)
@@ -55,7 +62,7 @@ def run(config_filepath, deploy, encoding):
 
         def batch_handler(instance):
             aggregator.write_run()
-
+            
     batch_options['post_task'] = batch_handler
     batch = pipeline.Batch(source_filepath, **batch_options)
     batch.run()
@@ -73,6 +80,17 @@ def deploy(config_filepath):
     deployer = tasks.Deploy(config)
     deployer.run()
 
+def set_up_cache_dir(cache_dir_path):
+    """Reset /cache_dir before a new batch."""
+
+    if os.path.lexists(cache_dir_path):
+        for root, dirs, files in os.walk(cache_dir_path):
+            for f in files:
+    	        os.unlink(os.path.join(root, f))
+            for d in dirs:
+    	        shutil.rmtree(os.path.join(root, d))
+    else: 
+        raise OSError("The folder chosen as \'cache_dir\' does not exist.")
 
 if __name__ == '__main__':
     cli()

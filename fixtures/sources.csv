@@ -1,4 +1,4 @@
-id,publisher_id,name,url,score,revision,schema,period_id,timestamp
+id,publisher_id,name,data,score,revision,schema,period_id,timestamp
 source1,xx_dept1,Source 1,https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv,8,1,,2015-01-01,2015-01-01
 source2,xx_dept2,Source 2,https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv,8,1,,2015-01-01,2015-01-01
 source3,xx_dept3,Source 3,https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv,8,1,,2015-01-01,2015-01-01

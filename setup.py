@@ -57,8 +57,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'dq = dataquality.main:cli',
-            'dataquality = dataquality.main:cli'
+            'dq = data_quality.main:cli',
+            'dataquality = data_quality.main:cli'
         ]
     },
 )
