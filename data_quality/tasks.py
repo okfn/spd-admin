@@ -13,7 +13,7 @@ import datetime
 import subprocess
 import contextlib
 import pytz
-import compat
+from data_quality import compat
 
 
 @contextlib.contextmanager
@@ -58,7 +58,7 @@ class Aggregator(Task):
     def run(self, pipeline):
         """Run on a Pipeline instance."""
 
-        with io.open(self.result_file, mode='a+t', encoding='utf-8') as f:
+        with io.open(self.result_file, mode='a+t', encoding='utf-8') as file:
 
             source = self.get_source(pipeline.data_source)
             result_id = uuid.uuid4().hex
@@ -73,7 +73,7 @@ class Aggregator(Task):
                                    source['period_id'], score, data, schema,
                                    summary, self.run_id, self.timestamp, report])
 
-            f.write('{0}\n'.format(result_set))
+            file.write('{0}\n'.format(result_set))
         
         self.fetch_data(pipeline, source['id'])
 
@@ -137,9 +137,9 @@ class Aggregator(Task):
         cached_file_name = os.path.join(self.cache_dir, source_id)
         pipeline.data.stream.seek(0)
         
-        with io.open(cached_file_name, mode='w+', encoding='utf-8') as f:
+        with io.open(cached_file_name, mode='w+', encoding='utf-8') as file:
             for line in pipeline.data.stream:
-                f.write(line)
+                file.write(line)
         
         
         
