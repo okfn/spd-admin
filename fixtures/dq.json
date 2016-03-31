@@ -7,5 +7,7 @@
     "publisher_file": "publishers.csv",
     "remotes": ["origin"],
     "branch": "master",
-    "goodtables_web": "http://goodtables.okfnlabs.org"
+    "goodtables_web": "http://goodtables.okfnlabs.org",
+    "format_key": "format",
+    "schema_key": "schema"
 }
