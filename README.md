@@ -69,3 +69,41 @@ dq deploy /path/to/config.json
 ```
 
 Deploys this Data Quality repository to a remote.
+
+### Schema
+
+```json
+{
+  "data_dir": "data",  # folder that contains the source_file and publisher_file
+  "cache_dir": "fetched",  # folder that will store each source as local cache
+  "result_file": "results.csv",  # will contain the result for each source
+  "run_file": "runs.csv",   # will contain the report for each collection of sources
+  "source_file": "sources.csv",   # collection of sources that will be analyzed
+  "publisher_file": "publishers.csv",   # publishers of the above mentioned sources
+  "performance_file": "performance.csv", # will contain the results for each publisher
+  "remotes": ["origin"],
+  "branch": "master",
+  "goodtables_web": "http://goodtables.okfnlabs.org", 
+  "data_key": "data",   # column from source_file that contains path/url to data source
+  "schema_key": "schema",   # column from source_file that contains path/url to schema
+  "format_key": "format",   # column from source_file that contains file format (csv, xls)
+  "encoding_key": "encoding",   #column from source_file that contains file encoding
+  "sleep": 2,   # time in seconds to wait between pipelines
+  "goodtables": {
+    "location": "http://goodtables.okfnlabs.org",
+    "processors": ["structure", "schema"],  # what processors should analyze the sources
+    "arguments": {
+      "encoding": "ISO-8859-2",   # specify encoding for all sources
+      "pipeline": {
+        "post_task": "",   # execute something after a pipeline analysis is finished
+        "options": {   # pass pipeline related options
+          "schema": {"case_insensitive_headers": true}
+        }
+      },
+      "batch": {
+        "post_task": "",    # execute something after a batch analysis is finished
+      }
+    }
+  }
+}
+```
