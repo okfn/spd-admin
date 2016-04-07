@@ -62,6 +62,9 @@ class Aggregator(Task):
         self.run_id = uuid.uuid4().hex
         self.timestamp = datetime.datetime.now(pytz.utc).isoformat()
 
+        self.initialize_file(self.result_file, self.result_schema)
+        self.initialize_file(self.run_file, self.run_schema)
+
     def run(self, pipeline):
         """Run on a Pipeline instance."""
 
@@ -95,6 +98,19 @@ class Aggregator(Task):
                 lookup.append({k: v for k, v in row.items() if k in _keys})
 
         return lookup
+
+    def initialize_file(self, filepath, headers):
+        """"Make sure a file exists and has headers before appending to it.
+
+        Args:
+            filepath: path to the file to be created
+            headers: a tuple to write as header
+
+        """
+        header_string = ','.join(headers)
+        if not os.path.exists(filepath):
+            with io.open(filepath, mode='w+', encoding='utf-8') as file:
+                file.write(header_string + '\n')
 
     def get_source(self, data):
 
@@ -160,13 +176,17 @@ class AssessPerformance(Task):
     def run(self):
         """Write the performance for all publishers."""
         
+        def format_row(row_dict, header_list):
+            ordered = list(row_dict.get(key) for key in header_list)
+            string_values = [str(val) for val in ordered]
+            return ','.join(string_values)
+
         publisher_ids = self.get_publishers()
         
-        with open(self.performance_file, mode='w') as performance_data:
+        with io.open(self.performance_file, mode='w+', encoding='utf-8') as pfile:
             fieldnames = ['publisher_id', 'period_id', 'files_count', 'score', 'valid',
                           'files_count_to_date', 'score_to_date', 'valid_to_date']
-            writer = csv.DictWriter(performance_data, fieldnames=fieldnames)
-            writer.writeheader()
+            pfile.write(','.join(fieldnames) + '\n')
             available_periods = []
 
             for publisher_id in publisher_ids:
@@ -180,23 +200,25 @@ class AssessPerformance(Task):
 
             for publisher_id in publisher_ids:
                 sources = self.get_sources(publisher_id)
-                performances = self.get_periods_data(publisher_id, all_periods, sources)
+                performances = self.get_periods_data(publisher_id, all_periods,
+                                                     sources)
                 publishers_performances += performances
                 all_sources += sources
                 for performance in performances:
-                    writer.writerow(performance)
+                    formated_row = format_row(performance, fieldnames)
+                    pfile.write('{0}\n'.format(formated_row))
 
             all_performances = self.get_periods_data('all', all_periods, all_sources)
 
             for performance in all_performances:
-                writer.writerow(performance)
+                pfile.write('{0}\n'.format(format_row(performance, fieldnames)))
 
     def get_publishers(self):
         """Return list of publishers ids."""
 
         publisher_ids = []
-        with open(self.publishers_file, mode='r') as publishers_file:
-            reader = csv.DictReader(publishers_file)
+        with io.open(self.publishers_file, mode='r', encoding='utf-8') as pub_file:
+            reader = csv.DictReader(pub_file)
             for row in reader:
                 publisher_ids.append(row['id'])
         return publisher_ids
@@ -206,7 +228,7 @@ class AssessPerformance(Task):
 
         sources = []
 
-        with open(self.sources_file, mode='r') as sources_file:
+        with io.open(self.sources_file, mode='r', encoding='utf-8') as sources_file:
             reader = csv.DictReader(sources_file)
             for row in reader:
                 source = {}
@@ -228,7 +250,7 @@ class AssessPerformance(Task):
         score = 0
         latest_timestamp = pytz.timezone('UTC').localize(datetime.datetime.min)
 
-        with open(self.result_file, mode='r') as results_file:
+        with io.open(self.result_file, mode='r', encoding='utf-8') as results_file:
             reader = csv.DictReader(results_file)
             for row in reader:
                 if row['source_id'] == source_id:
