@@ -171,3 +171,83 @@ project
     └───cache_dir
 
 ```
+
+#### source_file schema
+
+`source_file` contains information about sources. It is used by `GoodTables` 
+to analyze each source and by `Data Quality CLI` to cache sources and assert the 
+performance of each publisher. 
+
+It should contain all the columns specified as keys in the json config 
+(egg: `format_key`). If you don't have an `encoding` column, make sure you pass the 
+`encoding` argument to the pipeline as shown in the [config structure](###structure-of-jsonconfig).
+Besides the columns in the schema below, you can add any other columns you want.
+
+| column_name | optional |  what_is_it |
+|---|---|---|
+| id | false  | id of the source |
+| publisher_id | false | id of the sources's publisher (= `id` column in `publisher_file`)|
+| data_key  |  false | the path/url to the source file |
+| format_key  |  true | the file format of the source file(eg: csv, xls) |
+| encoding_key  | true  | the encoding of the source file (eg: utf-8)|
+| schema_key  | true  | the path/url to the source file's schema|
+| period_id  | false  | the period this source corresponds to (date or interval of dates) | 
+
+
+#### publisher_file schema
+
+`publisher_file` contains information about publishers, and it's used by `Data Quality CLI`
+to correlate a `publisher_id` with it's sources and additional information. You can 
+include any additional columns.
+
+| column_name | optional | default_value| what_is_it|
+|---|---|---|---|
+| id | false  | - | the id of the publisher |
+
+#### run_file schema
+
+`run_file` keeps track of runs. It is updated after each run. 
+
+| column_name | what_is_it|
+|---|---|
+| id | id of the run  |
+| timestamp | when the run finished |
+| total_score |  the total score of all sources analyzed in the run |
+
+#### result_file schema
+
+`result_file` contains the results for each source. It is updated during each run.
+
+| column_name | what_is_it|
+|---|---|
+| id | id of the result |
+| source_id   | id of the source (= `id` column in `source_file`) |
+| publisher_id  |  id of the source's publisher (= `publisher_id` column in `source_file`) |
+| period_id | id of the source's period (= `period_id` column in `source_file`) |
+| score | validity score of the source obtained from `GoodTables` |
+| data | the path/url to the source file |
+| schema | the path/url to the source's schema |
+| summary | |
+| run_id | id of the run the result is part of (= `id` column in `run_file`) |
+| timestamp | timestamp of the run the result is part of  (= `timestamp` column in `run_file`) |
+| report | url to the `GoodTables` report for this result |
+
+#### performance_file schema
+
+`performance_file` contains statistics about publishers performance both individually and
+overall . The performance is calculated per period in order to track their progress.
+
+| column_name | what_is_it|
+|---|---|
+| publisher_id | id of the publisher (= `publisher_id` column in `source_file`) |
+| period_id | id of the analyzed period (= `period_id` column in `source_file`) |
+| files_count | number of files published during the analyzed period |
+| score | average score of the files published in the analyzed period |
+| valid | percent of valid sources from the analyzed period |
+| files_count_to_date | total number of files published up to the analyzed period |
+| score_to_date | average score of all files published up to the analyzed period |
+| valid_to_date | number of all valid files published up to the analyzed period |
+
+
+
+
