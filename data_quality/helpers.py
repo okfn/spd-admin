@@ -5,6 +5,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import io
+import json
 import shutil
 import collections
 from data_quality import compat
@@ -22,6 +24,19 @@ def set_up_cache_dir(cache_dir_path):
     else:
         raise OSError("The folder chosen as \'cache_dir\' does not exist.")
 
+def resolve_relative_path(config_filepath, config_path):
+    """Construct a path from the config file path if the paths in the config are relative"""
+
+    if not os.path.isabs(config_path):
+        return os.path.join(os.path.dirname(config_filepath), config_path)
+
+def load_json_config(config_filepath):
+    """Loads the json config into a dictionary"""
+
+    with io.open(config_filepath, mode='rt', encoding='utf-8') as file:
+        config = json.loads(file.read())
+    return config
+
 def deep_update_dict(source_dict, new_dict):
     """Update a nested dictionary (modified in place) with another dictionary.
 
@@ -38,15 +53,3 @@ def deep_update_dict(source_dict, new_dict):
             source_dict[key] = new_dict[key]
     return source_dict
 
-def format_row(row_dict, header_list):
-    """Format the values of a dict accoording to the headers list"""
-
-    ordered = []
-    for key in header_list:
-        value = row_dict.get(key)
-        if value is not str or bytes:
-            ordered.append(str(value))
-        else:
-            ordered.append(value)
-
-    return ordered

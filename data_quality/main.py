@@ -5,38 +5,26 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import sys
-import io
-import json
 import click
 from goodtables import pipeline
-from data_quality import tasks, utilities
+from data_quality import tasks, helpers, generators
 
 @click.group()
 def cli():
     """The entry point into the CLI."""
-
 
 @cli.command()
 @click.argument('config_filepath')
 @click.option('--encoding', default=None)
 @click.option('--deploy', is_flag=True)
 def run(config_filepath, deploy, encoding):
-
     """Process data sources for a Spend Publishing Dashboard instance."""
 
-    with io.open(config_filepath, mode='rt', encoding='utf-8') as file:
-        config = json.loads(file.read())
+    config = helpers.load_json_config(config_filepath)
+    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
+    config['cache_dir'] = helpers.resolve_relative_path(config_filepath, config['cache_dir'])
 
-    if not os.path.isabs(config['data_dir']):
-        config['data_dir'] = os.path.join(os.path.dirname(config_filepath),
-                                          config['data_dir'])
-
-    if not os.path.isabs(config['cache_dir']):
-        config['cache_dir'] = os.path.join(os.path.dirname(config_filepath),
-                                           config['cache_dir'])
-
-    utilities.set_up_cache_dir(config['cache_dir'])
+    helpers.set_up_cache_dir(config['cache_dir'])
     source_filepath = os.path.join(config['data_dir'], config['source_file'])
     default_batch_options = {
         'goodtables': {
@@ -53,7 +41,7 @@ def run(config_filepath, deploy, encoding):
             }
         }
     }
-    options = utilities.deep_update_dict(default_batch_options, config)
+    options = helpers.deep_update_dict(default_batch_options, config)
     aggregator = tasks.Aggregator(options)
 
     if deploy:
@@ -83,14 +71,41 @@ def run(config_filepath, deploy, encoding):
 @cli.command()
 @click.argument('config_filepath')
 def deploy(config_filepath):
-
     """Deploy data sources for a Spend Publishing Dashboard instance."""
 
-    with io.open(config_filepath, mode='rt', encoding='utf-8') as f:
-        config = json.loads(f.read())
-
+    config = helpers.load_json_config(config_filepath)
+    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
     deployer = tasks.Deploy(config)
     deployer.run()
+
+
+@cli.command()
+@click.argument('generator_class')
+@click.argument('endpoint')
+@click.argument('config_filepath', type=click.Path(exists=True))
+@click.option('-gp','--generator_path', type=click.Path(exists=True), default=None,
+              help='Full path to your custom generator (mandatory if you use a custom generator')
+@click.option('-ft', '--file_type', multiple=True, default=['csv','excel'],
+              help='File types that should be included in sources (default: csv and excel)')
+def generate(generator_class, endpoint, config_filepath, generator_path, file_type):
+    """Generate a database from the given endpoint
+
+    Args:
+
+        generator_class: Name of the generator class (ex: CkanGenerator)
+        endpoint: Url where the generator should get the data from
+        config_filepath: Path to the json config for data-quality-cli
+    """
+    if generator_class not in generators._built_in_generators:
+        if generator_path is None:
+            raise click.BadParameter(('You need to provide the path for your custom'
+                                     'generator using the `--generator_path` option.'))
+
+    file_types = list(file_type)
+    config = helpers.load_json_config(config_filepath)
+    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
+    generator = tasks.Generate(config)
+    generator.run(generator_class, endpoint, generator_path, file_types)
 
 if __name__ == '__main__':
     cli()

@@ -71,6 +71,34 @@ dq deploy /path/to/config.json
 
 Deploys this Data Quality repository to a remote.
 
+### Generate
+
+```
+dq generate GeneratorClass http://endpoint_to_data_sources /path/to/config/file
+```
+
+There is currently one built-in generator for CKAN instances.
+Ex: Generating a database from `data.gld.gov.au`:
+
+```
+dq generate CkanGenerator https://data.qld.gov.au/ tests/fixtures/dq.json
+```
+
+By default, it will include only `CSV` and `excel`(`XLS`, `XLSX`) files. If you want to change that use
+the `--file_type` option like below:
+
+```
+dq --file_type csv --file_type txt generate CkanGenerator https://data.qld.gov.au/ tests/fixtures/dq.json
+```
+
+If you want to built a custom Generator, just inherit and overwrite the methods of `BaseGenerator` class
+then use:
+
+```
+dq --generator_path /path/to/custom/generator generate CustomGeneratorClass endpoint /path/to/config/file
+
+```
+
 ### Structure of json config
 
 ```json

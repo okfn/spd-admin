@@ -8,7 +8,9 @@ import os
 import io
 from . import tasks
 from . import main
-from . import utilities
+from . import generators
+from . import helpers
+from . import compat
 
 def get_version():
     version_path = os.path.join(os.path.dirname(__file__), 'VERSION')
@@ -16,4 +18,4 @@ def get_version():
 
 __version__ = get_version()
 
-__all__ = ['main', 'tasks', 'utilities']
+__all__ = ['main', 'tasks', 'helpers', 'generators', 'compat']

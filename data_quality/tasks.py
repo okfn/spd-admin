@@ -16,7 +16,10 @@ import pytz
 import re
 import json
 import dateutil
-from data_quality import compat, exceptions, utilities
+import importlib
+from runpy import run_path
+from pydoc import locate
+from data_quality import compat, exceptions, generators
 
 @contextlib.contextmanager
 def cd(path):
@@ -94,9 +97,8 @@ class Aggregator(Task):
         _keys = ['id', 'publisher_id', data_key , 'period_id']
         lookup = []
 
-        with io.open(self.sources_file, mode='r+t', encoding='utf-8') as sources:
-            reader = csv.DictReader(sources)
-            for row in reader:
+        with compat.UnicodeDictReader(self.sources_file) as sources:
+            for row in sources:
                 lookup.append({k: v for k, v in row.items() if k in _keys})
 
         return lookup
@@ -189,11 +191,11 @@ class AssessPerformance(Task):
         """Write the performance for all publishers."""
 
         publisher_ids = self.get_publishers()
+        fieldnames = ['publisher_id', 'period_id', 'files_count', 'score', 'valid',
+                      'files_count_to_date', 'score_to_date', 'valid_to_date']
 
-        with compat.UnicodeWriter(self.performance_file, quoting=csv.QUOTE_MINIMAL) as pfile:
-            fieldnames = ['publisher_id', 'period_id', 'files_count', 'score', 'valid',
-                          'files_count_to_date', 'score_to_date', 'valid_to_date']
-            pfile.writerow(fieldnames)
+        with compat.UnicodeDictWriter(self.performance_file, fieldnames) as pfile:
+            pfile.writeheader()
             available_periods = []
 
             for publisher_id in publisher_ids:
@@ -212,21 +214,20 @@ class AssessPerformance(Task):
                 publishers_performances += performances
                 all_sources += sources
                 for performance in performances:
-                    formated_row = utilities.format_row(performance, fieldnames)
-                    pfile.writerow(formated_row)
+                    pfile.writerow(performance)
 
             all_performances = self.get_periods_data('all', all_periods, all_sources)
 
             for performance in all_performances:
-                pfile.writerow(utilities.format_row(performance, fieldnames))
+                pfile.writerow(performance)
 
     def get_publishers(self):
         """Return list of publishers ids."""
 
         publisher_ids = []
-        with io.open(self.publishers_file, mode='r', encoding='utf-8') as pub_file:
-            reader = csv.DictReader(pub_file)
-            for row in reader:
+
+        with compat.UnicodeDictReader(self.publishers_file) as pub_file:
+            for row in pub_file:
                 publisher_ids.append(row['id'])
         return publisher_ids
 
@@ -235,14 +236,12 @@ class AssessPerformance(Task):
 
         sources = []
 
-        with io.open(self.sources_file, mode='r', encoding='utf-8') as sources_file:
-            reader = csv.DictReader(sources_file)
-            for row in reader:
+        with compat.UnicodeDictReader(self.sources_file) as sources_file:
+            for row in sources_file:
                 source = {}
                 if row['publisher_id'] == publisher_id:
                     source['id'] = row['id']
-                    if row['period_id']:
-                        source['period_id'] = self.get_period(row['period_id'])
+                    source['period_id'] = self.get_period(row['period_id'])
                     source['score'] = self.get_source_score(source['id'])
                     sources.append(source)
         return sources
@@ -257,9 +256,8 @@ class AssessPerformance(Task):
         score = 0
         latest_timestamp = pytz.timezone('UTC').localize(datetime.datetime.min)
 
-        with io.open(self.result_file, mode='r', encoding='utf-8') as results_file:
-            reader = csv.DictReader(results_file)
-            for row in reader:
+        with compat.UnicodeDictReader(self.result_file) as result_file:
+            for row in result_file:
                 if row['source_id'] == source_id:
                     timestamp = dateutil.parser.parse(row['timestamp'])
                     if timestamp > latest_timestamp:
@@ -275,24 +273,10 @@ class AssessPerformance(Task):
 
         """
 
-        separators = re.findall(r"\W", period)
-        occurrences = [{char, separators.count(char)} for char in separators]
-        unique = [char for no_times, char in occurrences if no_times == 1]
-
-        if len(unique) == 1:
-            candidates = period.split(unique[0])
-            periods = []
-            for candidate in candidates:
-                try:
-                    date_object = dateutil.parser.parse(candidate, fuzzy=True).date()
-                    periods.append(date_object)
-                except ValueError:
-                    break
-            if len(periods) == len(candidates):
-                return periods[-1]
-
+        if not period:
+            return ''
         try:
-            date_object = dateutil.parser.parse(period, fuzzy=True).date()
+            date_object = dateutil.parser.parse(period).date()
             return date_object
         except ValueError:
             return ''
@@ -337,7 +321,7 @@ class AssessPerformance(Task):
         period_sources = []
 
         for source in sources:
-            if period == source['period_id']:
+            if period == source.get('period_id',''):
                 period_sources.append(source)
         return period_sources
 
@@ -383,10 +367,8 @@ class AssessPerformance(Task):
         """
 
         periods = []
-
         for source in sources:
-            if source['period_id']:
-                periods.append(source['period_id'])
+            periods.append(source['period_id'])
         periods = list(set(periods))
         return periods
 
@@ -398,6 +380,8 @@ class AssessPerformance(Task):
 
         """
 
+        nulls = [val for val in periods if not val]
+        periods = filter(None, periods)
         oldest_date = sorted(periods)[0]
         current_date = datetime.date.today()
         delta = dateutil.relativedelta.relativedelta(months=1)
@@ -407,6 +391,7 @@ class AssessPerformance(Task):
         while relative_date <= current_date:
             all_periods.append(relative_date)
             relative_date += delta
+        all_periods.extend(set(nulls))
         return all_periods
 
 
@@ -483,3 +468,34 @@ class Deploy(Task):
                 instance_metadata['last_modified'] = current_time
                 updated_json = json.dumps(instance_metadata, indent=4)
                 instance.write(compat.str(updated_json))
+
+class Generate(Task):
+
+    """A Task runner to generate a dataset from a certain resource (ex: CKAN)."""
+
+    def __init__(self, config):
+        super(Generate, self).__init__(config)
+
+    def run(self, generator_name, endpoint, generator_path,file_types):
+        """Delegate the generation processes to the chosen generator
+
+        Args:
+            generator_name: Name of the generator class (ex: CkanGenerator)
+            endpoint: Url where the generator should get the data from
+            generator_path: Path to the custom generator module
+        """
+
+        if generator_name not in generators._built_in_generators:
+            try:
+                module = run_path(generator_path)
+                generator_class = module['generator_name']
+            except KeyError:
+                raise ValueError('The class name for the custom generator couldn\'t be loaded')
+        else:
+            generator_class = locate('data_quality.generators.%s' % generator_name)
+
+        generator = generator_class(endpoint)
+        generator.generate_publishers(self.publishers_file)
+        generator.generate_sources(self.sources_file, file_types=file_types)
+        return generator
+
