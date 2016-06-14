@@ -190,4 +190,4 @@ class UnicodeDictReader(UnicodeReader):
     __next__ = next
 
     def __iter__(self):
-        return
+        return self

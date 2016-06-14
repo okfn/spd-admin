@@ -9,7 +9,7 @@ import io
 import json
 import shutil
 import collections
-from data_quality import compat
+from . import compat
 
 def set_up_cache_dir(cache_dir_path):
     """Reset /cache_dir before a new batch."""
@@ -31,10 +31,36 @@ def resolve_relative_path(config_filepath, config_path):
         return os.path.join(os.path.dirname(config_filepath), config_path)
 
 def load_json_config(config_filepath):
-    """Loads the json config into a dictionary"""
+    """Loads the json config into a dictionary, overwriting the defaults"""
 
+    default_config = {
+        'data_dir': '',
+        'cache_dir': 'fetched',
+        'result_file': 'results.csv',
+        'run_file': 'runs.csv',
+        'source_file': 'sources.csv',
+        'publisher_file': 'publishers.csv',
+        'performance_file': 'performance.csv',
+        'remotes': ['origin'],
+        'branch': 'master',
+        'goodtables': {
+            'goodtables_web': 'http://goodtables.okfnlabs.org',
+            'arguments': {
+                'pipeline': {},
+                'batch': {
+                    'data_key': 'data'
+                }
+            }
+        }
+    }
+
+    if not config_filepath:
+        return default_config
     with io.open(config_filepath, mode='rt', encoding='utf-8') as file:
-        config = json.loads(file.read())
+        user_config = json.loads(file.read())
+        config = deep_update_dict(default_config, user_config)
+        config['data_dir'] = resolve_relative_path(config_filepath, config['data_dir'])
+        config['cache_dir'] = resolve_relative_path(config_filepath, config['cache_dir'])
     return config
 
 def deep_update_dict(source_dict, new_dict):
@@ -52,4 +78,5 @@ def deep_update_dict(source_dict, new_dict):
         else:
             source_dict[key] = new_dict[key]
     return source_dict
+
 

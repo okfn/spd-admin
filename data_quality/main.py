@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import os
 import click
 from goodtables import pipeline
-from data_quality import tasks, helpers, generators
+from . import tasks, utilities, generators
 
 @click.group()
 def cli():
@@ -20,29 +20,11 @@ def cli():
 def run(config_filepath, deploy, encoding):
     """Process data sources for a Spend Publishing Dashboard instance."""
 
-    config = helpers.load_json_config(config_filepath)
-    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
-    config['cache_dir'] = helpers.resolve_relative_path(config_filepath, config['cache_dir'])
-
-    helpers.set_up_cache_dir(config['cache_dir'])
+    config = utilities.load_json_config(config_filepath)
+    utilities.set_up_cache_dir(config['cache_dir'])
     source_filepath = os.path.join(config['data_dir'], config['source_file'])
-    default_batch_options = {
-        'goodtables': {
-            'arguments': {
-                'pipeline': {
-                    'processors': ['structure', 'schema'],
-                    'options': {
-                        'schema': {'case_insensitive_headers': True}
-                    }
-                },
-                'batch': {
-                    'data_key': 'data'
-                }
-            }
-        }
-    }
-    options = helpers.deep_update_dict(default_batch_options, config)
-    aggregator = tasks.Aggregator(options)
+
+    aggregator = tasks.Aggregator(config)
 
     if deploy:
 
@@ -61,9 +43,9 @@ def run(config_filepath, deploy, encoding):
             assesser.run()
 
     post_tasks = {'post_task': batch_handler, 'pipeline_post_task': aggregator.run}
-    options['goodtables']['arguments']['batch'].update(post_tasks)
-    batch_options = options['goodtables']['arguments']['batch']
-    batch_options['pipeline_options'] = options['goodtables']['arguments']['pipeline']
+    config['goodtables']['arguments']['batch'].update(post_tasks)
+    batch_options = config['goodtables']['arguments']['batch']
+    batch_options['pipeline_options'] = config['goodtables']['arguments']['pipeline']
     batch = pipeline.Batch(source_filepath, **batch_options)
     batch.run()
 
@@ -73,8 +55,7 @@ def run(config_filepath, deploy, encoding):
 def deploy(config_filepath):
     """Deploy data sources for a Spend Publishing Dashboard instance."""
 
-    config = helpers.load_json_config(config_filepath)
-    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
+    config = utilities.load_json_config(config_filepath)
     deployer = tasks.Deploy(config)
     deployer.run()
 
@@ -82,7 +63,8 @@ def deploy(config_filepath):
 @cli.command()
 @click.argument('generator_class')
 @click.argument('endpoint')
-@click.argument('config_filepath', type=click.Path(exists=True))
+@click.option('-cf','--config_filepath', type=click.Path(exists=True), default=None,
+              help='Full path to the json config for data-quality-cli')
 @click.option('-gp','--generator_path', type=click.Path(exists=True), default=None,
               help='Full path to your custom generator (mandatory if you use a custom generator')
 @click.option('-ft', '--file_type', multiple=True, default=['csv','excel'],
@@ -94,7 +76,6 @@ def generate(generator_class, endpoint, config_filepath, generator_path, file_ty
 
         generator_class: Name of the generator class (ex: CkanGenerator)
         endpoint: Url where the generator should get the data from
-        config_filepath: Path to the json config for data-quality-cli
     """
     if generator_class not in generators._built_in_generators:
         if generator_path is None:
@@ -102,8 +83,10 @@ def generate(generator_class, endpoint, config_filepath, generator_path, file_ty
                                      'generator using the `--generator_path` option.'))
 
     file_types = list(file_type)
-    config = helpers.load_json_config(config_filepath)
-    config['data_dir'] = helpers.resolve_relative_path(config_filepath, config['data_dir'])
+    config = utilities.load_json_config(config_filepath)
+    if not config_filepath:
+        config['data_dir'] = utilities.resolve_relative_path(os.getcwdu(), config['data_dir'])
+
     generator = tasks.Generate(config)
     generator.run(generator_class, endpoint, generator_path, file_types)
 

@@ -19,7 +19,7 @@ import dateutil
 import importlib
 from runpy import run_path
 from pydoc import locate
-from data_quality import compat, exceptions, generators
+from . import compat, exceptions, generators
 
 @contextlib.contextmanager
 def cd(path):
@@ -59,10 +59,10 @@ class Aggregator(Task):
         super(Aggregator, self).__init__(*args, **kwargs)
         self.max_score = 10
         self.lookup = self.get_lookup()
-        self.run_schema = ('id', 'timestamp', 'total_score')
-        self.result_schema = ('id', 'source_id', 'publisher_id', 'period_id',
+        self.run_schema = ['id', 'timestamp', 'total_score']
+        self.result_schema = ['id', 'source_id', 'publisher_id', 'period_id',
                               'score', 'data', 'schema', 'summary', 'run_id',
-                              'timestamp', 'report')
+                              'timestamp', 'report']
         self.run_id = uuid.uuid4().hex
         self.timestamp = datetime.datetime.now(pytz.utc).isoformat()
 
@@ -89,7 +89,7 @@ class Aggregator(Task):
             result_file.writerow(result)
 
             if pipeline.data:
-                self.fetch_data(pipeline.data.stream, source)
+                self.fetch_data(pipeline.data.stream, pipeline.data.encoding, source)
 
     def get_lookup(self):
 
@@ -97,8 +97,8 @@ class Aggregator(Task):
         _keys = ['id', 'publisher_id', data_key , 'period_id']
         lookup = []
 
-        with compat.UnicodeDictReader(self.sources_file) as sources:
-            for row in sources:
+        with compat.UnicodeDictReader(self.sources_file) as sources_file:
+            for row in sources_file:
                 lookup.append({k: v for k, v in row.items() if k in _keys})
 
         return lookup
@@ -112,8 +112,8 @@ class Aggregator(Task):
 
         """
         if not os.path.exists(filepath):
-            with compat.UnicodeWriter(filepath, quoting=csv.QUOTE_MINIMAL) as file:
-                file.writerow(headers)
+            with compat.UnicodeWriter(filepath, quoting=csv.QUOTE_MINIMAL) as a_file:
+                a_file.writerow(headers)
 
     def get_source(self, data_src):
         """Find the entry correspoding to data_src from sources file"""
@@ -166,7 +166,7 @@ class Aggregator(Task):
 
         return True
 
-    def fetch_data(self, data_stream, source):
+    def fetch_data(self, data_stream, encoding, source):
         """Cache the data source in the /fetched directory"""
 
         data_key = self.config['goodtables']['arguments']['batch']['data_key']
@@ -174,9 +174,9 @@ class Aggregator(Task):
         cached_file_name = os.path.join(self.cache_dir, source_name)
         data_stream.seek(0)
 
-        with io.open(cached_file_name, mode='w+') as file:
+        with io.open(cached_file_name, mode='w+', encoding=encoding) as fetched_file:
             for line in data_stream:
-                file.write(line)
+                fetched_file.write(line)
 
 
 class AssessPerformance(Task):
@@ -194,8 +194,8 @@ class AssessPerformance(Task):
         fieldnames = ['publisher_id', 'period_id', 'files_count', 'score', 'valid',
                       'files_count_to_date', 'score_to_date', 'valid_to_date']
 
-        with compat.UnicodeDictWriter(self.performance_file, fieldnames) as pfile:
-            pfile.writeheader()
+        with compat.UnicodeDictWriter(self.performance_file, fieldnames) as performance_file:
+            performance_file.writeheader()
             available_periods = []
 
             for publisher_id in publisher_ids:
@@ -214,20 +214,20 @@ class AssessPerformance(Task):
                 publishers_performances += performances
                 all_sources += sources
                 for performance in performances:
-                    pfile.writerow(performance)
+                    performance_file.writerow(performance)
 
             all_performances = self.get_periods_data('all', all_periods, all_sources)
 
             for performance in all_performances:
-                pfile.writerow(performance)
+                performance_file.writerow(performance)
 
     def get_publishers(self):
         """Return list of publishers ids."""
 
         publisher_ids = []
 
-        with compat.UnicodeDictReader(self.publishers_file) as pub_file:
-            for row in pub_file:
+        with compat.UnicodeDictReader(self.publishers_file) as publishers_file:
+            for row in publishers_file:
                 publisher_ids.append(row['id'])
         return publisher_ids
 
@@ -476,7 +476,7 @@ class Generate(Task):
     def __init__(self, config):
         super(Generate, self).__init__(config)
 
-    def run(self, generator_name, endpoint, generator_path,file_types):
+    def run(self, generator_name, endpoint, generator_path, file_types):
         """Delegate the generation processes to the chosen generator
 
         Args:
@@ -492,7 +492,7 @@ class Generate(Task):
             except KeyError:
                 raise ValueError('The class name for the custom generator couldn\'t be loaded')
         else:
-            generator_class = locate('data_quality.generators.%s' % generator_name)
+            generator_class = locate('data_quality.generators.{0}'.format(generator_name))
 
         generator = generator_class(endpoint)
         generator.generate_publishers(self.publishers_file)
