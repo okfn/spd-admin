@@ -321,7 +321,7 @@ class AssessPerformance(Task):
         period_sources = []
 
         for source in sources:
-            if period == source.get('period_id',''):
+            if period == source['period_id']:
                 period_sources.append(source)
         return period_sources
 
@@ -380,8 +380,6 @@ class AssessPerformance(Task):
 
         """
 
-        nulls = [val for val in periods if not val]
-        periods = filter(None, periods)
         oldest_date = sorted(periods)[0]
         current_date = datetime.date.today()
         delta = dateutil.relativedelta.relativedelta(months=1)
@@ -391,7 +389,6 @@ class AssessPerformance(Task):
         while relative_date <= current_date:
             all_periods.append(relative_date)
             relative_date += delta
-        all_periods.extend(set(nulls))
         return all_periods
 
 

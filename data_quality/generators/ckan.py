@@ -61,7 +61,7 @@ class CkanGenerator(BaseGenerator):
         resources = []
         for resource in datum.get('resources', {}):
             new_resource = {}
-            new_resource['data'] = resource.get('url')
+            new_resource['data'] = resource['url']
             ext = path.splitext(new_resource['data'])[1][1:].lower()
             new_resource['format'] = 'excel' if ext in ['xls', 'xlsx'] else ext
             file_types = ['excel' if ext in ['xls', 'xlsx'] else ext for ext in file_types]
@@ -69,10 +69,8 @@ class CkanGenerator(BaseGenerator):
             if new_resource['format'] in file_types:
                 publisher = datum.get('organization', {})
                 new_resource['publisher_id'] = publisher.get('name')
-                new_resource['id'] = resource.get('id')
-                new_resource['data'] = resource.get('url')
-                new_resource['period_id'] = resource.get('last_modified',
-                                                         resource.get('created',''))
+                new_resource['id'] = resource['id']
+                new_resource['period_id'] = resource['created']
                 title = datum.get('title', '')
                 name = resource.get('name', '')
                 new_resource['title'] = ' / '.join(val for val in [title, name] if val)
