@@ -9,4 +9,4 @@ from .base import BaseGenerator
 
 __all__ = ['CkanGenerator', 'BaseGenerator']
 
-_built_in_generators = ['CkanGenerator']
+_built_in_generators = {'ckan': CkanGenerator}

@@ -61,34 +61,39 @@ def deploy(config_filepath):
 
 
 @cli.command()
-@click.argument('generator_class')
+@click.argument('generator_name')
 @click.argument('endpoint')
 @click.option('-cf','--config_filepath', type=click.Path(exists=True), default=None,
               help='Full path to the json config for data-quality-cli')
-@click.option('-gp','--generator_path', type=click.Path(exists=True), default=None,
-              help='Full path to your custom generator (mandatory if you use a custom generator')
+@click.option('-gp','--generator_class_path', default=None,
+              help='Path to your custom generator (Ex: mymodule.CustomGenerator)')
 @click.option('-ft', '--file_type', multiple=True, default=['csv','excel'],
               help='File types that should be included in sources (default: csv and excel)')
-def generate(generator_class, endpoint, config_filepath, generator_path, file_type):
+def generate(generator_name, endpoint, config_filepath, generator_class_path, file_type):
     """Generate a database from the given endpoint
 
     Args:
 
-        generator_class: Name of the generator class (ex: CkanGenerator)
+        generator_name: Name of the generator (ex: ckan)
         endpoint: Url where the generator should get the data from
     """
-    if generator_class not in generators._built_in_generators:
-        if generator_path is None:
-            raise click.BadParameter(('You need to provide the path for your custom'
-                                     'generator using the `--generator_path` option.'))
 
     file_types = list(file_type)
     config = utilities.load_json_config(config_filepath)
     if not config_filepath:
-        config['data_dir'] = utilities.resolve_relative_path(os.getcwdu(), config['data_dir'])
+        config['data_dir'] = utilities.resolve_relative_path(os.getcwd(), config['data_dir'])
+
+    if generator_name not in generators._built_in_generators.keys():
+        generator_class_path = (generator_class_path or
+                                config.get('generator', {}).get(generator_name,None))
+        if not generator_class_path:
+            msg = ('You need to provide the path for your custom generator using the'
+                   '`--generator_class_path` option or by providing it in the config:'
+                   'Ex: {"generator":{"generator_name": "mymodule.CustomGenerator"}}')
+            raise ValueError(msg)
 
     generator = tasks.Generate(config)
-    generator.run(generator_class, endpoint, generator_path, file_types)
+    generator.run(generator_name, endpoint, generator_class_path, file_types)
 
 if __name__ == '__main__':
     cli()

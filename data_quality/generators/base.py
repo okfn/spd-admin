@@ -17,5 +17,9 @@ class BaseGenerator(object):
     def generate_sources(self, sources_filepath, file_types=['csv','excel']):
         """Generate sources file for CSV database"""
 
+        raise NotImplementedError('You must overwrite this method with your generator\'s specific logic.')
+
     def generate_publishers(self, publishers_filepath):
         """Generate publishers file for CSV database"""
+
+        raise NotImplementedError('You must overwrite this method with your generator\'s specific logic.')

@@ -477,20 +477,21 @@ class Generate(Task):
         """Delegate the generation processes to the chosen generator
 
         Args:
-            generator_name: Name of the generator class (ex: CkanGenerator)
+            generator_name: Name of the generator (ex: ckan)
             endpoint: Url where the generator should get the data from
-            generator_path: Path to the custom generator module
+            generator_path: Path to the custom generator class, if used
+            file_types: List of file types that should be included in sources
         """
 
-        if generator_name not in generators._built_in_generators:
-            try:
-                module = run_path(generator_path)
-                generator_class = module['generator_name']
-            except KeyError:
-                raise ValueError('The class name for the custom generator couldn\'t be loaded')
+        if  generators._built_in_generators.get(generator_name, None):
+            generator_class = generators._built_in_generators[generator_name]
         else:
-            generator_class = locate('data_quality.generators.{0}'.format(generator_name))
-
+            try:
+                _module, _class = generator_path.rsplit('.', 1)
+                generator_class = getattr(importlib.import_module(_module), _class)
+            except ValueError:
+                raise ValueError(('The path you provided for the generator class is '
+                                  'not valid. Should be of type `mymodule.MyGenerator`'))
         generator = generator_class(endpoint)
         generator.generate_publishers(self.publishers_file)
         generator.generate_sources(self.sources_file, file_types=file_types)
