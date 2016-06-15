@@ -21,6 +21,7 @@ def run(config_filepath, deploy, encoding):
     """Process data sources for a Spend Publishing Dashboard instance."""
 
     config = utilities.load_json_config(config_filepath)
+    utilities.resolve_dir(config['cache_dir'])
     utilities.set_up_cache_dir(config['cache_dir'])
     source_filepath = os.path.join(config['data_dir'], config['source_file'])
 
@@ -81,7 +82,8 @@ def generate(generator_name, endpoint, config_filepath, generator_class_path, fi
     file_types = list(file_type)
     config = utilities.load_json_config(config_filepath)
     if not config_filepath:
-        config['data_dir'] = utilities.resolve_relative_path(os.getcwd(), config['data_dir'])
+        config['data_dir'] = utilities.resolve_dir_name(os.getcwd(), config['data_dir'])
+    utilities.resolve_dir(config['data_dir'])
 
     if generator_name not in generators._built_in_generators.keys():
         generator_class_path = (generator_class_path or

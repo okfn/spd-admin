@@ -21,20 +21,32 @@ def set_up_cache_dir(cache_dir_path):
 
             for directory in dirs:
                 shutil.rmtree(os.path.join(root, directory))
-    else:
-        raise OSError("The folder chosen as \'cache_dir\' does not exist.")
 
-def resolve_relative_path(config_filepath, config_path):
-    """Construct a path from the config file path if the paths in the config are relative"""
+def resolve_dir(dir_path):
+    """ Make sure the dir_path given in the config exists
 
-    if not os.path.isabs(config_path):
-        return os.path.join(os.path.dirname(config_filepath), config_path)
+        Args:
+            dir_path: path of directory from config that should be resolved
+    """
+
+    try:
+        os.makedirs(dir_path)
+    except OSError:
+        if not os.path.isdir(dir_path):
+            raise
+    return dir_path
+
+def resolve_dir_name(config_filepath, dir_path):
+    """Create an absolute path from the file path and the path given in the config"""
+
+    if not os.path.isabs(dir_path):
+       return os.path.join(os.path.dirname(config_filepath), dir_path)
 
 def load_json_config(config_filepath):
     """Loads the json config into a dictionary, overwriting the defaults"""
 
     default_config = {
-        'data_dir': '',
+        'data_dir': 'data',
         'cache_dir': 'fetched',
         'result_file': 'results.csv',
         'run_file': 'runs.csv',
@@ -59,8 +71,8 @@ def load_json_config(config_filepath):
     with io.open(config_filepath, mode='rt', encoding='utf-8') as file:
         user_config = json.loads(file.read())
         config = deep_update_dict(default_config, user_config)
-        config['data_dir'] = resolve_relative_path(config_filepath, config['data_dir'])
-        config['cache_dir'] = resolve_relative_path(config_filepath, config['cache_dir'])
+        config['data_dir'] = resolve_dir_name(config_filepath, config['data_dir'])
+        config['cache_dir'] = resolve_dir_name(config_filepath, config['cache_dir'])
     return config
 
 def deep_update_dict(source_dict, new_dict):
