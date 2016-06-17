@@ -473,7 +473,7 @@ class Generate(Task):
     def __init__(self, config):
         super(Generate, self).__init__(config)
 
-    def run(self, generator_name, endpoint, generator_path, file_types):
+    def run(self, generator_name, endpoint, generator_path, file_types, simulate=False):
         """Delegate the generation processes to the chosen generator
 
         Args:
@@ -493,6 +493,10 @@ class Generate(Task):
                 raise ValueError(('The path you provided for the generator class is '
                                   'not valid. Should be of type `mymodule.MyGenerator`'))
         generator = generator_class(endpoint)
+
+        if simulate:
+            return generator
+
         generator.generate_publishers(self.publishers_file)
         generator.generate_sources(self.sources_file, file_types=file_types)
-        return generator
+
