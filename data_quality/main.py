@@ -97,5 +97,6 @@ def generate(generator_name, endpoint, config_filepath, generator_class_path, fi
     generator = tasks.Generate(config)
     generator.run(generator_name, endpoint, generator_class_path, file_types)
 
+
 if __name__ == '__main__':
     cli()

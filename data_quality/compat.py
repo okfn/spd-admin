@@ -191,3 +191,4 @@ class UnicodeDictReader(UnicodeReader):
 
     def __iter__(self):
         return self
+

@@ -496,4 +496,3 @@ class Generate(Task):
         generator.generate_publishers(self.publishers_file)
         generator.generate_sources(self.sources_file, file_types=file_types)
         return generator
-

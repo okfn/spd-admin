@@ -83,6 +83,7 @@ def deep_update_dict(source_dict, new_dict):
         new_dict: dict to update with
 
     """
+    
     for key, value in new_dict.items():
         if isinstance(value, collections.Mapping) and value:
             returned = deep_update_dict(source_dict.get(key, {}), value)
@@ -90,5 +91,3 @@ def deep_update_dict(source_dict, new_dict):
         else:
             source_dict[key] = new_dict[key]
     return source_dict
-
-
