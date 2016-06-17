@@ -338,7 +338,7 @@ class AssessPerformance(Task):
             total = 0
             for source in period_sources:
                 total += int(source['score'])
-            score = round(total / len(period_sources))
+            score = int(round(total / len(period_sources)))
         return score
 
     def get_period_valid(self, period_sources):
@@ -355,7 +355,7 @@ class AssessPerformance(Task):
                 if int(source['score']) == 100:
                     valids.append(source)
             if valids:
-                valid = round(len(valids) / len(period_sources) * 100)
+                valid = int(round(len(valids) / len(period_sources) * 100))
         return valid
 
     def get_unique_periods(self, sources):
