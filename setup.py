@@ -17,7 +17,7 @@ def read(*paths):
 
 
 PACKAGE = 'data_quality'
-INSTALL_REQUIRES = ['click>=6.2', 'goodtables>=0.6.5', 'pytz']
+INSTALL_REQUIRES = ['click>=6.2', 'goodtables>=0.6.5', 'pytz', 'datapackage']
 TESTS_REQUIRE = ['tox']
 README = read('README.md')
 VERSION = read(PACKAGE, 'VERSION')
@@ -40,6 +40,9 @@ setup(
     url='https://github.com/okfn/data-quality-cli',
     license='MIT',
     keywords=['frictionless data', 'data quality'],
+    package_data={
+        'data_quality': ['datapackage.json', 'default_dq_config.json'],
+    },
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',

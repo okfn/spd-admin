@@ -8,7 +8,9 @@ import os
 import io
 import json
 import shutil
+import pkg_resources
 import collections
+import datapackage
 from . import compat
 
 def set_up_cache_dir(cache_dir_path):
@@ -40,31 +42,14 @@ def resolve_dir_name(config_filepath, dir_path):
     """Create an absolute path from the file path and the path given in the config"""
 
     if not os.path.isabs(dir_path):
-       return os.path.join(os.path.dirname(config_filepath), dir_path)
+        config_path = os.path.abspath(os.path.dirname(config_filepath))
+        return os.path.join(config_path, dir_path)
 
 def load_json_config(config_filepath):
     """Loads the json config into a dictionary, overwriting the defaults"""
 
-    default_config = {
-        'data_dir': 'data',
-        'cache_dir': 'fetched',
-        'result_file': 'results.csv',
-        'run_file': 'runs.csv',
-        'source_file': 'sources.csv',
-        'publisher_file': 'publishers.csv',
-        'performance_file': 'performance.csv',
-        'remotes': ['origin'],
-        'branch': 'master',
-        'goodtables': {
-            'goodtables_web': 'http://goodtables.okfnlabs.org',
-            'arguments': {
-                'pipeline': {},
-                'batch': {
-                    'data_key': 'data'
-                }
-            }
-        }
-    }
+    default_config = pkg_resources.resource_string(__name__, 'default_dq_config.json')
+    default_config = json.loads(default_config)
 
     if not config_filepath:
         return default_config
@@ -91,3 +76,43 @@ def deep_update_dict(source_dict, new_dict):
         else:
             source_dict[key] = new_dict[key]
     return source_dict
+
+def get_resource_metadata(file_path, datapkg):
+    """Get a resources's metadata based on its path"""
+
+    matching_resources = [resource for resource in datapkg.resources
+                          if resource.local_data_path == file_path]
+
+    if matching_resources:
+        return matching_resources[0].metadata
+    else:
+        return None
+
+def get_default_datapackage():
+    """Return the default datapackage"""
+
+    default_datapkg = pkg_resources.resource_string(__name__, 'datapackage.json')
+    datapkg = datapackage.DataPackage(json.loads(default_datapkg))
+    return datapkg
+
+def load_json_datapackage(config):
+    """Generate a datapackage or return the existing one"""
+
+    datapkg_filepath = config.get('datapackage_file', '')
+
+    if not datapkg_filepath or not os.path.isabs(datapkg_filepath):
+        data_dir_path = os.path.normpath(config['data_dir'])
+        datapkg_dir_path = os.path.dirname(data_dir_path)
+        datapkg_filepath = os.path.join(datapkg_dir_path, 'datapackage.json')
+
+    if not os.path.exists(datapkg_filepath):
+        with io.open(datapkg_filepath, mode='w+', encoding='utf-8') as new_datapkg:
+            default_datapkg = get_default_datapackage()
+            for resource in default_datapkg.resources:
+                resource.metadata['path'] = os.path.join(config['data_dir'],
+                                                         resource.metadata['path'])
+            json_datapkg = json.dumps(default_datapkg.to_dict(), indent=4)
+            new_datapkg.write(compat.str(json_datapkg))
+            return default_datapkg
+
+    return  datapackage.DataPackage(datapkg_filepath)

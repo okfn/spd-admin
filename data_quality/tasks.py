@@ -76,7 +76,7 @@ class Aggregator(Task):
             source = self.get_source(pipeline.data_source)
             result_id = uuid.uuid4().hex
             period_id = source['period_id']
-            score = compat.str(self.get_pipeline_score(pipeline))
+            score = self.get_pipeline_score(pipeline)
             data_source = pipeline.data_source
             schema = ''
             summary = '' # TODO: how/what should a summary be?
@@ -161,7 +161,7 @@ class Aggregator(Task):
         """Write this run in the run file."""
 
         with compat.UnicodeAppender(self.run_file, quoting=csv.QUOTE_MINIMAL) as run_file:
-            entry = [self.run_id, self.timestamp, str(int(sum(self.all_scores) / len(self.lookup)))]
+            entry = [self.run_id, self.timestamp, int(round(sum(self.all_scores) / len(self.lookup)))]
             run_file.writerow(entry)
 
         return True
