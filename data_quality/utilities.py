@@ -48,8 +48,8 @@ def resolve_dir_name(config_filepath, dir_path):
 def load_json_config(config_filepath):
     """Loads the json config into a dictionary, overwriting the defaults"""
 
-    default_config = pkg_resources.resource_string(__name__, 'default_dq_config.json')
-    default_config = json.loads(default_config)
+    default_config = pkg_resources.resource_string('data_quality', 'default_dq_config.json')
+    default_config = json.loads(default_config.decode('utf-8'))
 
     if not config_filepath:
         return default_config
@@ -59,23 +59,6 @@ def load_json_config(config_filepath):
         config['data_dir'] = resolve_dir_name(config_filepath, config['data_dir'])
         config['cache_dir'] = resolve_dir_name(config_filepath, config['cache_dir'])
     return config
-
-def deep_update_dict(source_dict, new_dict):
-    """Update a nested dictionary (modified in place) with another dictionary.
-
-    Args:
-        source_dict: dict to be updated
-        new_dict: dict to update with
-
-    """
-    
-    for key, value in new_dict.items():
-        if isinstance(value, collections.Mapping) and value:
-            returned = deep_update_dict(source_dict.get(key, {}), value)
-            source_dict[key] = returned
-        else:
-            source_dict[key] = new_dict[key]
-    return source_dict
 
 def get_resource_metadata(file_path, datapkg):
     """Get a resources's metadata based on its path"""
@@ -91,8 +74,8 @@ def get_resource_metadata(file_path, datapkg):
 def get_default_datapackage():
     """Return the default datapackage"""
 
-    default_datapkg = pkg_resources.resource_string(__name__, 'datapackage.json')
-    datapkg = datapackage.DataPackage(json.loads(default_datapkg))
+    default_datapkg = pkg_resources.resource_string('data_quality', 'datapackage.json')
+    datapkg = datapackage.DataPackage(json.loads(default_datapkg.decode('utf-8')))
     return datapkg
 
 def load_json_datapackage(config):
@@ -105,6 +88,8 @@ def load_json_datapackage(config):
         datapkg_dir_path = os.path.dirname(data_dir_path)
         datapkg_filepath = os.path.join(datapkg_dir_path, 'datapackage.json')
 
+    datapkg_filepath = os.path.abspath(datapkg_filepath)
+
     if not os.path.exists(datapkg_filepath):
         with io.open(datapkg_filepath, mode='w+', encoding='utf-8') as new_datapkg:
             default_datapkg = get_default_datapackage()
@@ -116,3 +101,20 @@ def load_json_datapackage(config):
             return default_datapkg
 
     return  datapackage.DataPackage(datapkg_filepath)
+
+def deep_update_dict(source_dict, new_dict):
+    """Update a nested dictionary (modified in place) with another dictionary.
+
+    Args:
+        source_dict: dict to be updated
+        new_dict: dict to update with
+
+    """
+
+    for key, value in new_dict.items():
+        if isinstance(value, collections.Mapping) and value:
+            returned = deep_update_dict(source_dict.get(key, {}), value)
+            source_dict[key] = returned
+        else:
+            source_dict[key] = new_dict[key]
+    return source_dict

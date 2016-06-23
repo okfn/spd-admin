@@ -6,7 +6,7 @@
     "source_file": "sources.csv",
     "publisher_file": "publishers.csv",
     "performance_file": "performance.csv",
-    "datapackage_file": "./datapackage.json",
+    "datapackage_file": "datapackage.json",
     "remotes": ["origin"],
     "branch": "master",
     "goodtables": {
