@@ -102,7 +102,7 @@
                     {
                         "name": "total_score",
                         "title": "Rounded average score of results in this run",
-                        "format": "integer",
+                        "type": "integer",
                         "constraints": { "required": true}
                     }
                 ],
@@ -130,7 +130,7 @@
                         "name": "publisher_id",
                         "title": "ID of the source's publisher",
                         "type": "string",
-                        "constraints": { "required": true, "unique": true }
+                        "constraints": { "required": true}
                     },
                     {
                         "name": "period_id",
@@ -164,7 +164,7 @@
                         "name": "run_id",
                         "title": "ID of the run in which the result was calculated",
                         "type": "string",
-                        "constraints": { "required": true, "unique":  true }
+                        "constraints": { "required": true, "unique": true }
                     },
                     {
                         "name": "timestamp",

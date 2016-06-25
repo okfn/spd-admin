@@ -45,6 +45,19 @@ def resolve_dir_name(config_filepath, dir_path):
         config_path = os.path.abspath(os.path.dirname(config_filepath))
         return os.path.join(config_path, dir_path)
 
+def get_resource_by_name(name, datapackage):
+    """Retrieve resource from datapackage by name"""
+
+    resources = [resource for resource in datapackage.resources
+                 if resource.metadata['name'] == name]
+
+    if len(resources) == 1:
+        return resources[0]
+    elif len(resources) == 0:
+        return None
+    else:
+        raise ValueError('There is more than one resource with this name')
+
 def load_json_config(config_filepath):
     """Loads the json config into a dictionary, overwriting the defaults"""
 
@@ -59,17 +72,6 @@ def load_json_config(config_filepath):
         config['data_dir'] = resolve_dir_name(config_filepath, config['data_dir'])
         config['cache_dir'] = resolve_dir_name(config_filepath, config['cache_dir'])
     return config
-
-def get_resource_metadata(file_path, datapkg):
-    """Get a resources's metadata based on its path"""
-
-    matching_resources = [resource for resource in datapkg.resources
-                          if resource.local_data_path == file_path]
-
-    if matching_resources:
-        return matching_resources[0].metadata
-    else:
-        return None
 
 def get_default_datapackage():
     """Return the default datapackage"""
