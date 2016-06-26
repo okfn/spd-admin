@@ -513,6 +513,7 @@ class Generate(Task):
             except ValueError:
                 raise ValueError(('The path you provided for the generator class is '
                                   'not valid. Should be of type `mymodule.MyGenerator`'))
+        generated_datapkg, datapkg_path = utilities.load_json_datapackage(self.config)
         generator = generator_class(endpoint, self.datapackage)
         generator.generate_publishers(self.publishers_file)
         generator.generate_sources(self.source_file, file_types=file_types)
