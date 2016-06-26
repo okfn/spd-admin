@@ -478,17 +478,14 @@ class Deploy(Task):
 
     def update_last_modified(self):
 
-        instance_file = os.path.join(self.config['data_dir'], 'instance.json')
-        instance_metadata = {}
-        if os.path.lexists(instance_file):
-            with io.open(instance_file, mode='r', encoding='utf-8') as instance:
-                instance_metadata = json.loads(instance.read())
+        user_datapkg, user_datapkg_path = utilities.load_json_datapackage(self.config)
+        datapkg_metadata = user_datapkg.metadata
 
-            with io.open(instance_file, mode='w+', encoding='utf-8') as instance:
-                current_time = strftime("%Y-%m-%d %H:%M:%S %Z", gmtime())
-                instance_metadata['last_modified'] = current_time
-                updated_json = json.dumps(instance_metadata, indent=4)
-                instance.write(compat.str(updated_json))
+        with io.open(user_datapkg_path, mode='w+', encoding='utf-8') as datapkg:
+            current_time = strftime("%Y-%m-%d %H:%M:%S %Z", gmtime())
+            datapkg_metadata['last_modified'] = current_time
+            updated_json = json.dumps(datapkg_metadata, indent=4)
+            datapkg.write(compat.str(updated_json))
 
 class Generate(Task):
 

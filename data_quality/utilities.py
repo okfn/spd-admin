@@ -81,7 +81,7 @@ def get_default_datapackage():
     return datapkg
 
 def load_json_datapackage(config):
-    """Generate a datapackage or return the existing one"""
+    """Generate a datapackage or return the existing one along with it's path"""
 
     datapkg_filepath = config.get('datapackage_file', '')
 
@@ -100,9 +100,9 @@ def load_json_datapackage(config):
                                                          resource.metadata['path'])
             json_datapkg = json.dumps(default_datapkg.to_dict(), indent=4)
             new_datapkg.write(compat.str(json_datapkg))
-            return default_datapkg
+            return (default_datapkg, datapkg_filepath)
 
-    return  datapackage.DataPackage(datapkg_filepath)
+    return  (datapackage.DataPackage(datapkg_filepath), datapkg_filepath)
 
 def deep_update_dict(source_dict, new_dict):
     """Update a nested dictionary (modified in place) with another dictionary.
