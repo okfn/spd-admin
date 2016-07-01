@@ -61,7 +61,7 @@ def get_resource_by_name(name, datapackage):
 def load_json_config(config_filepath):
     """Loads the json config into a dictionary, overwriting the defaults"""
 
-    default_config = pkg_resources.resource_string('data_quality', 'default_dq_config.json')
+    default_config = pkg_resources.resource_string('data_quality', 'dq.default.json')
     default_config = json.loads(default_config.decode('utf-8'))
 
     if not config_filepath:
@@ -76,7 +76,8 @@ def load_json_config(config_filepath):
 def get_default_datapackage():
     """Return the default datapackage"""
 
-    default_datapkg = pkg_resources.resource_string('data_quality', 'datapackage.json')
+    default_datapkg = pkg_resources.resource_string('data_quality',
+                                                    'datapackage.default.json')
     datapkg = datapackage.DataPackage(json.loads(default_datapkg.decode('utf-8')))
     return datapkg
 

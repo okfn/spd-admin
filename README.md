@@ -237,7 +237,7 @@ project
     └───datapackage.json
 ```
 
-The `datapackage.json` file is optional but recommended in order to make the project
+The `datapackage.json` file is required in order to make the project
 a valid [Data Package](http://specs.frictionlessdata.io/data-packages/). If you use
 the `dq generate` command, it will be automatically generated for you.
 

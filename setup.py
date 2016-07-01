@@ -41,7 +41,7 @@ setup(
     license='MIT',
     keywords=['frictionless data', 'data quality'],
     package_data={
-        'data_quality': ['datapackage.json', 'default_dq_config.json'],
+        'data_quality': ['datapackage.default.json', 'dq.default.json'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
