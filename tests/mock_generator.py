@@ -9,7 +9,7 @@ from data_quality import  generators
 class MockGenerator(generators.BaseGenerator):
     """This class deletes the current database and regenerates it"""
 
-    def __init__(self, url=None):
+    def __init__(self, url=None, datapackage=None):
         """Create an instance
         
         Args:
