@@ -15,12 +15,16 @@ The quality assessment is done using [GoodTables](http://goodtables.readthedocs.
 The proposed workflow is this:
 
 * An administrator creates a folder for a given project which will be equivalent to a data package.
+* The administrator runs the [`dq init`](#init) command to create templates for the configuration file  
+and the `datapackage.json` file along with the folder structure.
+* The administrator updates the [configuration file](#config) to reflect the structure of the data package 
+and optionally to configure the quality assessment.
+* The administrator updates the `datapackage.json` file with information specific to the project
+and other customizations. 
 * The administrator creates a `source_file` and `publisher_file`:
     * By using the [generate command](#generate).
     * By using custom scripts ([see this example](https://github.com/okfn/data-quality-uk-25k-spend)).
     * In any other way that is in sync with the [schema](#schema).
-* The administrator updates the [configuration file](#config) to reflect the structure of the data package 
-and optionally to configure the quality assessment.
 * The administrator [runs the validation](#run) over the set of sources.
 * The data is managed in a git repository (or other version control system), which the administrator has locally
 * The administrator [deploys](#deploy) the data package to a central data repository (ex: GitHub)
@@ -46,30 +50,27 @@ pip install git+https://github.com/okfn/dataquality-cli.git#egg=dataquality
 dq --help
 ```
 
-<a name="run"/>
-### Run
+<a name="init"/>
+### Init
 </a>
 
-```
-dq run /path/to/config.json --deploy
-```
+Before starting building the database, it is recommended that you run:
 
-Runs a *data quality assessment* on all data sources in a data repository.
-
-* Writes results for each source to the `result_file`.
-* Writes run meta data to `run_file`.
-* Writes aggregations on results for each publisher in the `performance_file`.
-* If `--deploy` is passed, then also commits, tags and pushes the new changes back to the data repositories central repository.
-
-<a name="run"/>
-### Deploy
-</a>
 
 ```
-dq deploy /path/to/config.json
+dq init --folder_path /path/to/future/datapackage
 ```
 
-Deploys this Data Quality repository to a remote.
+This command will potentially spare you some effort and create a `dq_config.json` file
+with the default configuration for Data Quality CLI, a `datapackage.json` with the default
+info about the data package and schemas for all the required resources, a `data` folder
+that will be used to store the database and a `fetched` folder that will store the 
+fetched sources. If you'd like to change the names of these folder or other configuration
+options, you can make a `dq_config.json` file before running the command. The command will
+leave your config file as it is and create the others according to your configuration.
+
+After running it, you should review and update your `dq_config` and `datapackage.json`
+with values specific to your project. 
 
 <a name="generate"/>
 ### Generate
@@ -104,11 +105,34 @@ You can either provide it in the config, or by using the `--generator_class_path
 dq generate custom_generator_name endpoint --generator_class_path mymodule.MyGenerator
 ```
 
-If no config file is provided, the generator will use the [default configuration](#default-config)
-creating the files in the folder where the command is executed. If you want to change that, use the `--config_filepath` option:
+If no config file is provided, the generator will use the [default configuration](###default-configuration)
+creating the files in the folder where the command is executed. If you want to change that, use the `--config_file_path` option:
 
 ```
-dq generate generator_name endpoint --config_filepath path/to/config
+dq generate generator_name endpoint --config_file_path path/to/config
+```
+
+<a name="run"/>
+### Run
+</a>
+
+
+```
+dq run /path/to/config.json --deploy
+```
+
+Runs a *data quality assessment* on all data sources in a data repository.
+
+* Writes aggregated results to the results.csv.
+* Writes run meta data to the run.csv.
+* If `--deploy` is passed, then also commits, tags and pushes the new changes back to the data repositories central repository.
+
+<a name="deploy"/>
+### Deploy
+</a>
+
+```
+dq deploy /path/to/config.json
 ```
 
 <a name="config"/>
@@ -320,18 +344,15 @@ project
 
 The `datapackage.json` file is required in order to make the project
 a valid [Data Package](http://specs.frictionlessdata.io/data-packages/). If you use
-the `dq generate` command, it will be automatically generated for you.
+the `dq init` command, it will be automatically generated for you from the 
+[the default datapackage](data_quality/datapackage.json).
+This file will be needed thoughout the app so you'll need to have it. 
+Take a look over the [Data Package](http://specs.frictionlessdata.io/data-packages/)
+specification if you'd like to customize the it for your project.
 
-An important note is that Data Quality CLI has it's own default datapackage file
-which is used to define the schema for all the files that it creates: `run_file`,
-`result_file`, `performance_file` and, if you use `dq generate`, for `sources_file` and 
-`publisher_file`. Please take a look over [the default datapackage](data_quality/datapackage.default.json)
-to get a better understanding of what these files contain. Also take a look 
-over the [Data Package](http://specs.frictionlessdata.io/data-packages/)
-specification if you'd like to customize the one in your project.
+*Warning:* The `datapackage.json` file is extensively used thoughtout Data Quality CLI and 
+the Data Quality Dashboard. To make sure it is kept in sync with the database that it 
+describes, several checks are performed at different steps. While you are free to customize
+your database by using custom generators and extra fields,
+you have to make sure that the fields required by Data Quality CLI to perform it's tasks are present.
 
-*Warning:* Changing the `schema` section for the files described in the generated `datapackage` 
-can lead to inconsistencies between the expected schema and the actual contents 
-of the files. If you'd like to include different fields in the `source_file` or
-`publisher_file`, it's best to create your own generator that can work with the custom
-schema. 
