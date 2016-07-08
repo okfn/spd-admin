@@ -279,12 +279,22 @@ of the column that contains it
 
   *Note:* If you use the schema processor but you don't provide a schema to compare against, the files will be evaluated as having no errors.
 
-  To see how using different processors influence the quality assessment, we set up several versions
+##### Examples:
+  To exemplify how using different processors influences the quality assessment, we set up several versions
   of the same dataset: UK public spend over £25000.
-  
-  This version uses both `structure` and `schema` processors, comparing each file agaist the
-  [spend publishing schema](https://raw.githubusercontent.com/okfn/goodtables/master/examples/hmt/spend-publishing-schema.json).
 
+  [Here](https://uk-25k-structure-only.herokuapp.com/) is a dashboard whose
+  data quality database is assessed only on `structure`. You can find the database and configuration 
+  [in this repository](https://github.com/georgiana-b/data-quality-uk-25k-spend/tree/uk-25k-spend-structure-only).
+
+  [This alternative version](https://uk-25k-given-schema.herokuapp.com/)
+  uses both `structure` and `schema` processors, comparing each file agaist the
+  [spend publishing schema](https://raw.githubusercontent.com/okfn/goodtables/master/examples/hmt/spend-publishing-schema.json).
+  It is the official configuration, with its corresponding repository [here](https://github.com/georgiana-b/data-quality-uk-25k-spend/tree/uk-25k-given-schema).
+
+  Lastly, [here is the less predictible version](https://uk-25k-inferred-schema.herokuapp.com/)
+  that uses both `structure` and `schema`, but it compares files agaist inferred schemas (i.e. using `infer_schema: true`).Corresponding
+  database repostory [here](https://github.com/georgiana-b/data-quality-uk-25k-spend/tree/uk-25k-spend-inferred-schema).
 
 <a name="schema"/>
 ### Schema
