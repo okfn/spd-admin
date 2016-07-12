@@ -18,10 +18,10 @@ The proposed workflow is this:
 * The administrator runs the [`dq init`](#init) command to create templates for the configuration file  
 and the `datapackage.json` file along with the folder structure.
 * The administrator updates the [configuration file](#config) to reflect the structure of the data package 
-and optionally to configure the quality assessment.
+and optionally to [configure the quality assessment](#quality-config).
 * The administrator updates the `datapackage.json` file with information specific to the project
 and other customizations. 
-* The administrator creates a `source_file` and `publisher_file`:
+* The administrator creates a `source_file` and a `publisher_file`:
     * By using the [generate command](#generate).
     * By using custom scripts ([see this example](https://github.com/okfn/data-quality-uk-25k-spend)).
     * In any other way that is in sync with the [schema](#schema).
@@ -50,9 +50,7 @@ pip install git+https://github.com/okfn/dataquality-cli.git#egg=dataquality
 dq --help
 ```
 
-<a name="init"/>
 ### Init
-</a>
 
 Before starting building the database, it is recommended that you run:
 
@@ -72,9 +70,7 @@ leave your config file as it is and create the others according to your configur
 After running it, you should review and update your `dq_config` and `datapackage.json`
 with values specific to your project. 
 
-<a name="generate"/>
 ### Generate
-</a>
 
 Generic command:
 
@@ -112,9 +108,7 @@ creating the files in the folder where the command is executed. If you want to c
 dq generate generator_name endpoint --config_file_path path/to/config
 ```
 
-<a name="run"/>
 ### Run
-</a>
 
 
 ```
@@ -127,9 +121,7 @@ Runs a *data quality assessment* on all data sources in a data repository.
 * Writes run meta data to the run.csv.
 * If `--deploy` is passed, then also commits, tags and pushes the new changes back to the data repositories central repository.
 
-<a name="deploy"/>
 ### Deploy
-</a>
 
 ```
 dq deploy /path/to/config.json
@@ -320,9 +312,7 @@ of the column that contains it
   that uses both `structure` and `schema`, but it compares files agaist inferred schemas (i.e. using `infer_schema: true`).Corresponding
   database repostory [here](https://github.com/georgiana-b/data-quality-uk-25k-spend/tree/uk-25k-spend-inferred-schema).
 
-<a name="schema"/>
 ### Schema
-</a>
 
 `Data Quality CLI` expects the following structure of the project folder, where 
 the names of files and folders are the ones defined in the json config given to  `dq run`:

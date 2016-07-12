@@ -10,7 +10,7 @@ class SourceNotFoundError(Exception):
     def __init__(self, msg=None, source=None):
         default_msg = 'The source {0} was not found in \'source_file\''.format(source)
         self.msg = msg or default_msg
-        Exception.__init__(self, msg)
+        super(SourceNotFoundError, self).__init__(msg)
 
 
 class DuplicateDataSourceError(Exception):
@@ -19,4 +19,4 @@ class DuplicateDataSourceError(Exception):
         default_msg = 'Different sources with the same path {0} have been found \
                        in \'source_file\''.format(source)
         self.msg = msg or default_msg
-        Exception.__init__(self, msg)
+        super(DuplicateDataSourceError, self).__init__(msg)
