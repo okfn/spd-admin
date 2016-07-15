@@ -1,4 +1,4 @@
-publisher_id,period_id,files_count,score,valid,files_count_to_date,score_to_date,valid_to_date
+publisher_id,created_at,files_count,score,valid,files_count_to_date,score_to_date,valid_to_date
 xx_dept1,2015-01-01,1,100,100,1,100,100
 xx_dept1,2015-02-01,0,0,0,1,100,100
 xx_dept1,2015-03-01,0,0,0,1,100,100

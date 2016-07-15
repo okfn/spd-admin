@@ -94,7 +94,7 @@ class PerformanceAssessor(Task):
                 source = {}
                 if row['publisher_id'] == publisher_id:
                     source['id'] = row['id']
-                    source['period_id'] = self.get_period(row['period_id'])
+                    source['created_at'] = self.get_period(row['created_at'])
                     source['score'] = self.get_source_score(source['id'])
                     sources.append(source)
         return sources
@@ -152,7 +152,7 @@ class PerformanceAssessor(Task):
             period_sources_to_date += period_sources
             performance = {}
             performance['publisher_id'] = publisher_id
-            performance['period_id'] = compat.str(period)
+            performance['created_at'] = compat.str(period)
             performance['files_count'] = len(period_sources)
             performance['score'] = self.get_period_score(period_sources)
             performance['valid'] = self.get_period_valid(period_sources)
@@ -174,7 +174,7 @@ class PerformanceAssessor(Task):
         period_sources = []
 
         for source in sources:
-            if period == source['period_id']:
+            if period == source['created_at']:
                 period_sources.append(source)
         return period_sources
 
@@ -221,7 +221,7 @@ class PerformanceAssessor(Task):
 
         periods = []
         for source in sources:
-            periods.append(source['period_id'])
+            periods.append(source['created_at'])
         periods = list(set(periods))
         return periods
 

@@ -1,4 +1,4 @@
-id,source_id,publisher_id,period_id,data,schema,score,summary,run_id,timestamp,report
+id,source_id,publisher_id,created_at,data,schema,score,summary,run_id,timestamp,report
 23bbfa29f736482e8eb4e66d7946816c,source1,xx_dept1,2015-01-01,https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv,,10,,b8920dbd47624b09bb406e6d72063f5e,2016-06-24 12:15:43.196648+00:00,http://goodtables.okfnlabs.org
 ae34242c6b76499fa702c9eea3600cc8,source2,xx_dept15,2015-01-01,https://raw.githubusercontent.com/okfn/goodtables/master/examples/april-to-may-12th-2010.xls,,0,,b8920dbd47624b09bb406e6d72063f5e,2016-06-24 12:15:43.196648+00:00,http://goodtables.okfnlabs.org
 da8cacb720d844009295c0b796afe344,source1,xx_dept1,2015-01-01,https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv,,10,,76d4baa409c24bce9504c8a79e32d623,2016-06-24 12:34:56.457805+00:00,http://goodtables.okfnlabs.org

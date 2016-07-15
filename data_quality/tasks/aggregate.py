@@ -48,7 +48,7 @@ class Aggregator(Task):
         with compat.UnicodeAppender(self.result_file, quoting=csv.QUOTE_MINIMAL) as result_file:
             source = self.get_source(pipeline.data_source)
             result_id = compat.str(uuid.uuid4().hex)
-            period_id = source['period_id']
+            created_at = source['created_at']
             score = self.get_pipeline_score(pipeline)
             data_source = pipeline.data_source
             schema = ''
@@ -56,7 +56,7 @@ class Aggregator(Task):
             report = self.get_pipeline_report_url(pipeline)
 
             result = [result_id, source['id'], source['publisher_id'],
-                      period_id, data_source, schema, score, summary,
+                      created_at, data_source, schema, score, summary,
                       self.run_id, self.timestamp, report]
             try:
                 result_file.writerow(list(self.result_schema.convert_row(*result)))
@@ -69,7 +69,7 @@ class Aggregator(Task):
 
     def get_lookup(self):
 
-        _keys = ['id', 'publisher_id', self.data_key, 'period_id', 'title']
+        _keys = ['id', 'publisher_id', self.data_key, 'created_at', 'title']
         lookup = []
 
         with compat.UnicodeDictReader(self.source_file) as sources_file:

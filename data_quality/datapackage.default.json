@@ -63,8 +63,8 @@
                         "type": "string"
                     },
                     {
-                        "name": "period_id",
-                        "title": "Time covered by the source / of its creation",
+                        "name": "created_at",
+                        "title": "Time of the source's creation.",
                         "type": "string",
                         "constraints": { "required": true }
                     }
@@ -133,8 +133,8 @@
                         "constraints": { "required": true}
                     },
                     {
-                        "name": "period_id",
-                        "title": "Time covered by the source / of its creation",
+                        "name": "created_at",
+                        "title": "time of the source's creation.",
                         "type": "string",
                         "constraints": { "required": true }
                     },
@@ -217,8 +217,8 @@
                         "constraints": { "required": true, "unique": true }
                     },
                     {
-                        "name": "period_id",
-                        "title": "ID of the period",
+                        "name": "created_at",
+                        "title": "Time of the source's creation.",
                         "type": "string",
                         "constraints": { "required": true }
                     },
