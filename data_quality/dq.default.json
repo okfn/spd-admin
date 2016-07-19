@@ -9,6 +9,8 @@
     "datapackage_file": "datapackage.json",
     "remotes": ["origin"],
     "branch": "master",
+    "assess_timeliness": false,
+    "timeliness":{},
     "goodtables": {
         "goodtables_web": "http://goodtables.okfnlabs.org",
         "arguments": {

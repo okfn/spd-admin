@@ -10,6 +10,7 @@ import json
 import shutil
 import collections
 import datapackage
+import jsontableschema
 import pkg_resources
 
 def set_up_cache_dir(cache_dir_path):
@@ -97,6 +98,20 @@ def deep_update_dict(source_dict, new_dict):
         if isinstance(value, collections.Mapping) and value:
             returned = deep_update_dict(source_dict.get(key, {}), value)
             source_dict[key] = returned
+        elif isinstance(value, list):
+            source_dict[key] = (source_dict.get(key,[]) + value)
         else:
             source_dict[key] = new_dict[key]
     return source_dict
+
+def dicts_to_schema_rows(rows, schema):
+    """Convert a list of dicts in a generator for schema compliant rows"""
+
+    for row in rows:
+        try:
+            values = [row[key] for key in schema.headers]
+            converted_row = list(schema.convert_row(*values))
+            yield converted_row
+        except jsontableschema.exceptions.MultipleInvalid as e:
+            for error in e.errors:
+                raise error

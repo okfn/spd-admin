@@ -14,6 +14,7 @@ import jsontableschema
 from data_quality import utilities, compat, exceptions
 from .base_task import Task
 from .check_datapackage import DataPackageChecker
+from .extract_relevance_period import RelevancePeriodExtractor
 
 
 class Aggregator(Task):
@@ -37,6 +38,8 @@ class Aggregator(Task):
         self.run_id = compat.str(uuid.uuid4().hex)
         self.timestamp = datetime.datetime.now(pytz.utc)
         self.max_score = 10
+        self.assess_timeliness = self.config['assess_timeliness']
+        self.timeliness_period = self.config['timeliness'].get('timeliness_period', 1)
         required_resources = [self.result_file, self.source_file,
                               self.publisher_file, self.run_file]
         datapackage_check.check_database_completeness(required_resources)
@@ -69,7 +72,8 @@ class Aggregator(Task):
 
     def get_lookup(self):
 
-        _keys = ['id', 'publisher_id', self.data_key, 'created_at', 'title']
+        _keys = ['id', 'publisher_id', self.data_key, 'created_at', 'title',
+                 'period_id']
         lookup = []
 
         with compat.UnicodeDictReader(self.source_file) as sources_file:

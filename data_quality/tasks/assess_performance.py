@@ -54,25 +54,14 @@ class PerformanceAssessor(Task):
                                                      sources)
                 publishers_performances += performances
                 all_sources += sources
-                for performance in performances:
-                    try:
-                        values = [performance[key] for key in performance_schema.headers]
-                        row = list(performance_schema.convert_row(*values))
-                        performance_file.writerow(row)
-                    except jsontableschema.exceptions.MultipleInvalid as e:
-                        for error in e.errors:
-                            raise error
+                for row in utilities.dicts_to_schema_rows(performances,
+                                                          performance_schema):
+                    performance_file.writerow(row)
 
             all_performances = self.get_periods_data('all', all_periods, all_sources)
-
-            for performance in all_performances:
-                try:
-                    values = [performance[key] for key in performance_schema.headers]
-                    row = list(performance_schema.convert_row(*values))
-                    performance_file.writerow(row)
-                except jsontableschema.exceptions.MultipleInvalid as e:
-                    for error in e.errors:
-                        raise error
+            for row in utilities.dicts_to_schema_rows(all_performances,
+                                                      performance_schema):
+                performance_file.writerow(row)
 
     def get_publishers(self):
         """Return list of publishers ids."""
