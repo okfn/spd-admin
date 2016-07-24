@@ -67,15 +67,42 @@ class TestAggregatorTask(TestTask):
         self.config['datapackage_file'] = 'datapackage_sources_with_period.json'
         self.config['assess_timeliness'] = True
         self.config['timeliness']['timeliness_strategy'] = ['period_id']
+        extractor = tasks.extract_relevance_period.RelevancePeriodExtractor(self.config)
+        extractor.run()
         aggregator_task = tasks.Aggregator(self.config)
         url = 'https://raw.githubusercontent.com/okfn/tabular-validator/master/examples/valid.csv'
         pipeline_instance = pipeline.Pipeline(data=url, format='csv',
                                               post_task=aggregator_task.run)
         pipeline_instance.run()
-        updated_sources = self.read_file_contents(aggregator_task.source_file)
-        expected_periods = ['17-10-2015/17-10-2015', '01-04-2010/31-05-2010']
-        extracted_periods = [source['period_id'] for source in updated_sources]
-        self.assertSequenceEqual(extracted_periods, expected_periods)
+        updated_sources = self.read_file_contents(aggregator_task.result_file)
+        result = updated_sources[-1]
+        score = int(result['score'])
+        self.assertEqual(98, score)
+
+    def test_aggregate_scoring_affected_rows(self):
+        """Test Aggregator scoring based on affected_rows"""
+
+        aggregator_task = tasks.Aggregator(self.config)
+        url = 'https://raw.githubusercontent.com/frictionlessdata/goodtables/master/examples/empty_rows_multiple.csv'
+        pipeline_instance = pipeline.Pipeline(data=url, format='csv',
+                                              post_task=aggregator_task.run)
+        pipeline_instance.run()
+        result = self.read_file_contents(aggregator_task.result_file)[-1]
+
+        self.assertEqual(int(result['score']), 21)
+
+    def tests_aggreate_scoring_occurrences(self):
+        """Test Aggregator scoring based on error occurences"""
+
+        self.config['scoring_algorithm'] = 2
+        aggregator_task = tasks.Aggregator(self.config)
+        url = 'https://raw.githubusercontent.com/frictionlessdata/goodtables/master/examples/empty_rows_multiple.csv'
+        pipeline_instance = pipeline.Pipeline(data=url, format='csv',
+                                              post_task=aggregator_task.run)
+        pipeline_instance.run()
+        result = self.read_file_contents(aggregator_task.result_file)[-1]
+
+        self.assertEqual(int(result['score']), 67)
 
     def read_file_contents(self, file_name):
         """Return file contents as list of dicts"""

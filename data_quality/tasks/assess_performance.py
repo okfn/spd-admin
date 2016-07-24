@@ -83,7 +83,7 @@ class PerformanceAssessor(Task):
                 source = {}
                 if row['publisher_id'] == publisher_id:
                     source['id'] = row['id']
-                    source['created_at'] = self.get_period(row['created_at'])
+                    source['created_at'] = utilities.date_from_string(row['created_at'])
                     source['score'] = self.get_source_score(source['id'])
                     sources.append(source)
         return sources
@@ -104,24 +104,8 @@ class PerformanceAssessor(Task):
                     timestamp = dateutil.parser.parse(row['timestamp'])
                     if timestamp > latest_timestamp:
                         latest_timestamp = timestamp
-                        score = int(row['score']) * 10
+                        score = int(row['score'])
         return score
-
-    def get_period(self, period):
-        """Return a valid period as date object
-
-        Args:
-            period: a string that might contain a date or range of dates
-
-        """
-
-        if not period:
-            return ''
-        try:
-            date_object = dateutil.parser.parse(period).date()
-            return date_object
-        except ValueError:
-            return ''
 
     def get_periods_data(self, publisher_id, periods, sources):
         """Return list of performances for a publisher, by period.
@@ -141,7 +125,7 @@ class PerformanceAssessor(Task):
             period_sources_to_date += period_sources
             performance = {}
             performance['publisher_id'] = publisher_id
-            performance['created_at'] = compat.str(period)
+            performance['month_of_creation'] = compat.str(period)
             performance['files_count'] = len(period_sources)
             performance['score'] = self.get_period_score(period_sources)
             performance['valid'] = self.get_period_valid(period_sources)
@@ -163,7 +147,7 @@ class PerformanceAssessor(Task):
         period_sources = []
 
         for source in sources:
-            if period == source['created_at']:
+            if period == source['created_at'].replace(day=1):
                 period_sources.append(source)
         return period_sources
 
@@ -223,6 +207,7 @@ class PerformanceAssessor(Task):
         """
 
         oldest_date = sorted(periods)[0]
+        oldest_date = oldest_date.replace(day=1)
         current_date = datetime.date.today()
         delta = dateutil.relativedelta.relativedelta(months=1)
         relative_date = oldest_date

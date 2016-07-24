@@ -135,7 +135,8 @@
                     {
                         "name": "created_at",
                         "title": "time of the source's creation.",
-                        "type": "string",
+                        "type": "date",
+                        "format": "date",
                         "constraints": { "required": true }
                     },
                     {
@@ -217,9 +218,10 @@
                         "constraints": { "required": true, "unique": true }
                     },
                     {
-                        "name": "created_at",
-                        "title": "Time of the source's creation.",
-                        "type": "string",
+                        "name": "month_of_creation",
+                        "title": "Month when the source was created",
+                        "type": "date",
+                        "format": "date",
                         "constraints": { "required": true }
                     },
                     {

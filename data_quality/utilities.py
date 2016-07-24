@@ -8,6 +8,8 @@ import io
 import os
 import json
 import shutil
+import dateutil
+import requests
 import collections
 import datapackage
 import jsontableschema
@@ -62,6 +64,14 @@ def load_json_config(config_filepath):
         config['cache_dir'] = resolve_dir_name(config_filepath, config['cache_dir'])
     return config
 
+def get_data_quality_spec():
+    """Downloads and loads the data quality spec json"""
+
+    config = load_json_config(None)
+    dq_spec_url = config['data_quality_spec']['data_quality_spec_web']
+    json_dq_spec = requests.get(dq_spec_url)
+    return json_dq_spec.json()
+
 def get_default_datapackage():
     """Return the default datapackage"""
 
@@ -99,10 +109,26 @@ def deep_update_dict(source_dict, new_dict):
             returned = deep_update_dict(source_dict.get(key, {}), value)
             source_dict[key] = returned
         elif isinstance(value, list):
-            source_dict[key] = (source_dict.get(key,[]) + value)
+            source_dict[key] = (source_dict.get(key, []) + value)
         else:
             source_dict[key] = new_dict[key]
     return source_dict
+
+def date_from_string(date_string):
+    """Return a date object from a string or None
+
+        Args:
+            date_string: a string that should contain a date
+    """
+
+    if not date_string:
+        date = None
+    else:
+        try:
+            date = dateutil.parser.parse(date_string).date()
+        except ValueError:
+            date = None
+    return date
 
 def dicts_to_schema_rows(rows, schema):
     """Convert a list of dicts in a generator for schema compliant rows"""

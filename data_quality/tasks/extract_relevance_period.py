@@ -55,13 +55,14 @@ class RelevancePeriodExtractor(Task):
 
         for source in sources:
             if source['period_id'] is None:
-                self.timeliness_strategy = ['created_at']
-                period_start, period_end = self.identify_period(source)
+                creation_date = utilities.date_from_string(source['created_at'])
+                dates = [creation_date, creation_date]
             else:
                 period_start, period_end = source['period_id']
-            periods = [period_start.date(), period_end.date()]
-            periods = [period.strftime('%d-%m-%Y') for period in periods]
-            source['period_id'] = '/'.join(periods)
+                dates = [period_start.date(), period_end.date()]
+            dates = [date.strftime('%d-%m-%Y') if isinstance(date, datetime.date)
+                     else '' for date in dates]
+            source['period_id'] = '/'.join(dates)
         self.update_sources_period(sources)
 
     def extract_period_from_sources(self):
