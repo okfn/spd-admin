@@ -82,6 +82,7 @@ class TestAggregatorTask(TestTask):
     def test_aggregate_scoring_affected_rows(self):
         """Test Aggregator scoring based on affected_rows"""
 
+        self.config['scoring_algorithm'] = 2
         aggregator_task = tasks.Aggregator(self.config)
         url = 'https://raw.githubusercontent.com/frictionlessdata/goodtables/master/examples/empty_rows_multiple.csv'
         pipeline_instance = pipeline.Pipeline(data=url, format='csv',
@@ -89,12 +90,11 @@ class TestAggregatorTask(TestTask):
         pipeline_instance.run()
         result = self.read_file_contents(aggregator_task.result_file)[-1]
 
-        self.assertEqual(int(result['score']), 21)
+        self.assertEqual(int(result['score']), 0)
 
     def tests_aggreate_scoring_occurrences(self):
         """Test Aggregator scoring based on error occurences"""
 
-        self.config['scoring_algorithm'] = 2
         aggregator_task = tasks.Aggregator(self.config)
         url = 'https://raw.githubusercontent.com/frictionlessdata/goodtables/master/examples/empty_rows_multiple.csv'
         pipeline_instance = pipeline.Pipeline(data=url, format='csv',
