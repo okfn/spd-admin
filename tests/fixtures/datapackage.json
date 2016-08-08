@@ -167,9 +167,10 @@
                         "constraints": {
                             "required": true
                         },
+                        "format": "date",
                         "name": "created_at",
                         "title": "Time of the source's creation.",
-                        "type": "string"
+                        "type": "date"
                     },
                     {
                         "constraints": {
@@ -265,9 +266,10 @@
                         "constraints": {
                             "required": true
                         },
-                        "name": "created_at",
-                        "title": "Time of the source's creation.",
-                        "type": "string"
+                        "format": "date",
+                        "name": "month_of_creation",
+                        "title": "Month when the source was created",
+                        "type": "date"
                     },
                     {
                         "constraints": {
