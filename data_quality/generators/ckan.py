@@ -5,8 +5,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import csv
-import requests
 from os import path
+import requests
 import jsontableschema
 from data_quality import compat, utilities
 from .base import BaseGenerator
@@ -56,13 +56,22 @@ class CkanGenerator(BaseGenerator):
         response.raise_for_status()
         data = response.json()
         count = data['result']['count']
-        all_data = []
+        all_packages = []
+        all_sources = []
         for start in range(0, count, 500):
             payload = {'rows': 500, 'start': start}
             response = requests.get(full_url, params=payload)
             data = response.json()
-            all_data += data['result']['results']
-        return all_data
+            all_packages += [result['id'] for result in  data['result']['results']]
+
+        for package_id in all_packages:
+            ext = 'api/3/action/package_show'
+            full_package_url = compat.urljoin(self.base_url, ext)
+            package_payload = {'use_default_schema': True, 'id': package_id}
+            response = requests.get(full_package_url, params=package_payload)
+            data = response.json()
+            all_sources.append(data['result'])
+        return all_sources
 
     def extract_sources(self, datum, file_types):
         """Extract all sources for one result"""
