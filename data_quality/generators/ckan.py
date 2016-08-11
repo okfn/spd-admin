@@ -22,6 +22,7 @@ class CkanGenerator(BaseGenerator):
         """
 
         super(CkanGenerator, self).__init__(url, datapackage)
+        self.default_publisher = None
 
     def generate_sources(self, sources_filepath, file_types=['csv', 'excel']):
         """Generates sources_file from the url"""
@@ -75,8 +76,13 @@ class CkanGenerator(BaseGenerator):
             file_types = ['excel' if ext in ['xls', 'xlsx'] else ext for ext in file_types]
             file_types.append('')
             if new_resource['format'] in file_types:
-                publisher = datum.get('organization', {})
-                new_resource['publisher_id'] = publisher.get('name')
+                publisher = datum.get('organization', None)
+                if publisher:
+                    new_resource['publisher_id'] = publisher.get('name')
+                else:
+                    self.default_publisher = {'name': 'no_organization',
+                                              'display_name': 'No Organization'}
+                    new_resource['publisher_id'] = self.default_publisher['name']
                 new_resource['id'] = resource['id']
                 new_resource['created_at'] = resource['created']
                 title = datum.get('title', '')
@@ -89,6 +95,8 @@ class CkanGenerator(BaseGenerator):
         """Generates publisher_file from the url"""
 
         results = self.get_publishers()
+        if self.default_publisher:
+            results.append(self.default_publisher)
         pub_resource = utilities.get_datapackage_resource(publishers_filepath,
                                                           self.datapackage)
         pub_schema = jsontableschema.model.SchemaModel(pub_resource.descriptor['schema'])
@@ -133,4 +141,3 @@ class CkanGenerator(BaseGenerator):
             if key == 'category':
                 publisher['type'] = extra.get('value')
         return publisher
-
